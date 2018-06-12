@@ -7,7 +7,7 @@ from models.discriminator import Discriminator
 from ckpt_manage import CheckpointManager
 
 
-tf.flags.DEFINE_integer("batch_size", 100, "batch size")
+tf.flags.DEFINE_integer("batch_size", 1000, "batch size")
 tf.flags.DEFINE_integer("sent_len", 5, "sentence length")
 
 FLAGS = tf.flags.FLAGS
@@ -44,7 +44,7 @@ if __name__ == "__main__":
             for w1, w2, x1, x2, _, _ in get_batch(data, FLAGS.batch_size, shuffle=True):
                 loss = G.pretrain(sess, w1, w2, x1, x2)
                 batch_idx += 1
-                if batch_idx % 500 == 0:
+                if batch_idx % 50 == 0:
                     print(f"Pre-train G epoch {epoch}, batch {batch_idx}, loss {loss}")
             print("\n")
         ckpt.save(sess)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 g_sent1, g_sent2, _, _ = G.generate(sess, w1, w2)
                 loss = D.train(sess, sent1, sent2, g_sent1, g_sent2)
                 batch_idx += 1
-                if batch_idx % 500 == 0:
+                if batch_idx % 50 == 0:
                     print(f"Pre-train D epoch {epoch}, batch {batch_idx}, loss {loss}")
             print("\n")
         ckpt.save(sess)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
                     d_loss = D.train(sess, sent1, sent2, g_sent1, g_sent2)
 
                 batch_idx += 1
-                if batch_idx % 500 == 0:
+                if batch_idx % 50 == 0:
                     print(f"Train epoch {epoch}, batch {batch_idx}, g_loss {g_loss}, d_loss {d_loss}")
             ckpt.save(sess)
             print("\n")
