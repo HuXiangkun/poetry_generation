@@ -18,19 +18,20 @@ class Generator:
 
     def build_net(self, init_embedding):
         # start token for two sentences
-        self.w1 = tf.placeholder(tf.int32, [self.batch_size], "w1")
-        self.w2 = tf.placeholder(tf.int32, [self.batch_size], "w2")
+        self.w1 = tf.placeholder(tf.int64, [self.batch_size], "w1")
+        self.w2 = tf.placeholder(tf.int64, [self.batch_size], "w2")
 
-        self.x1 = tf.placeholder(tf.int32, [self.batch_size, self.gen_len], "x1")
-        self.x2 = tf.placeholder(tf.int32, [self.batch_size, self.gen_len], "x2")
+        self.x1 = tf.placeholder(tf.int64, [self.batch_size, self.gen_len], "x1")
+        self.x2 = tf.placeholder(tf.int64, [self.batch_size, self.gen_len], "x2")
 
-        self.reward = tf.placeholder(tf.float32, [self.batch_size], "reward")
+        self.reward1 = tf.placeholder(tf.float32, [self.gen_len, self.batch_size], "reward1")
+        self.reward2 = tf.placeholder(tf.float32, [self.gen_len, self.batch_size], "reward2")
 
         with tf.variable_scope("embedding"):
             self.embedding = weight_variable(name="embedding",
                                              shape=[self.vocab_size, self.embedding_size],
                                              initial_value=init_embedding)
-            if init_embedding:
+            if init_embedding is not None:
                 print("Generator gotta initial embedding!")
 
         w1_embed = tf.nn.embedding_lookup(self.embedding, self.w1)
@@ -165,32 +166,43 @@ class Generator:
         return cell
 
     def sample_token_logits(self, h):
-        logits = mlp(h, [self.vocab_size, self.vocab_size], [tf.nn.relu, None], "sample_logits")
+        with tf.variable_scope("logits", reuse=tf.AUTO_REUSE):
+            self.Ws = weight_variable("Ws", [h.shape[-1], self.vocab_size])
+            self.bs = bias_variable("bs", [self.vocab_size])
+        logits = tf.matmul(h, self.Ws) + self.bs
         return logits
 
     def compute_loss(self, label1, logits1, label2, logits2, with_reward):
         def _cross_entropy(elems):
-            labels, logits = elems
+            labels, logits, reward = elems
             loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=labels, logits=logits)
             if with_reward:
-                loss *= self.reward
+                loss *= reward
             loss = tf.reduce_mean(loss)
-            return [loss, logits]
-
-        loss_sent1 = tf.map_fn(_cross_entropy,
-                               [tf.transpose(label1, [1, 0, 2]), logits1])[0]
-        loss_sent1 = tf.reduce_sum(loss_sent1)
-        loss_sent2 = tf.map_fn(_cross_entropy,
-                               [tf.transpose(label2, [1, 0, 2]), logits2])[0]
-        loss_sent2 = tf.reduce_sum(loss_sent2)
+            return [loss, logits, reward]
+        if with_reward:
+            loss_sent1 = tf.map_fn(_cross_entropy,
+                                   [tf.transpose(label1, [1, 0, 2]), logits1, self.reward1])[0]
+            loss_sent1 = tf.reduce_sum(loss_sent1)
+            loss_sent2 = tf.map_fn(_cross_entropy,
+                                   [tf.transpose(label2, [1, 0, 2]), logits2, self.reward2])[0]
+            loss_sent2 = tf.reduce_sum(loss_sent2)
+        else:
+            r = tf.ones([self.gen_len, self.batch_size], dtype=tf.float32)
+            loss_sent1 = tf.map_fn(_cross_entropy,
+                                   [tf.transpose(label1, [1, 0, 2]), logits1, r])[0]
+            loss_sent1 = tf.reduce_sum(loss_sent1)
+            loss_sent2 = tf.map_fn(_cross_entropy,
+                                   [tf.transpose(label2, [1, 0, 2]), logits2, r])[0]
+            loss_sent2 = tf.reduce_sum(loss_sent2)
 
         loss = (loss_sent1 + loss_sent2) / (self.gen_len * 2)
         return loss
 
     def generate(self, sess, w1, w2):
         gen_x1, gen_x2 = sess.run(fetches=[self.gen_token_arr1, self.gen_token_arr2],
-                                feed_dict={self.w1: w1,
-                                           self.w2: w2})
+                                  feed_dict={self.w1: w1,
+                                             self.w2: w2})
         sent1 = np.concatenate([np.expand_dims(w1, -1), gen_x1], axis=-1)
         sent2 = np.concatenate([np.expand_dims(w2, -1), gen_x2], axis=-1)
         return sent1, sent2, gen_x1, gen_x2
@@ -203,11 +215,12 @@ class Generator:
                                       self.x2: x2})
         return loss
 
-    def rl_train(self, sess, w1, w2, x1, x2, reward):
+    def rl_train(self, sess, w1, w2, x1, x2, reward1, reward2):
         _, loss = sess.run(fetches=[self.rl_train_op, self.rl_train_loss],
                            feed_dict={self.w1: w1,
                                       self.w2: w2,
                                       self.x1: x1,
                                       self.x2: x2,
-                                      self.reward: reward})
+                                      self.reward1: reward1,
+                                      self.reward2: reward2})
         return loss

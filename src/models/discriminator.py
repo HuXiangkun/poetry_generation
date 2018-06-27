@@ -14,10 +14,10 @@ class Discriminator:
             self.build_net(init_embedding)
 
     def build_net(self, init_embedding):
-        self.sent1_real = tf.placeholder(tf.int32, [self.batch_size, self.sent_len], name="sent1_real")
-        self.sent2_real = tf.placeholder(tf.int32, [self.batch_size, self.sent_len], name="sent2_real")
-        self.sent1_fake = tf.placeholder(tf.int32, [self.batch_size, self.sent_len], name="sent1_fake")
-        self.sent2_fake = tf.placeholder(tf.int32, [self.batch_size, self.sent_len], name="sent2_fake")
+        self.sent1_real = tf.placeholder(tf.int64, [self.batch_size, self.sent_len], name="sent1_real")
+        self.sent2_real = tf.placeholder(tf.int64, [self.batch_size, self.sent_len], name="sent2_real")
+        self.sent1_fake = tf.placeholder(tf.int64, [self.batch_size, self.sent_len], name="sent1_fake")
+        self.sent2_fake = tf.placeholder(tf.int64, [self.batch_size, self.sent_len], name="sent2_fake")
         # self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
 
         x_real = tf.concat([self.sent1_real, self.sent2_real], -1)
@@ -27,7 +27,7 @@ class Discriminator:
             self.embedding = weight_variable(name="embedding",
                                              shape=[self.vocab_size, self.embedding_size],
                                              initial_value=init_embedding)
-            if init_embedding:
+            if init_embedding is not None:
                 print("Discriminator gotta initial embedding!")
 
         x_real_embed = tf.nn.embedding_lookup(self.embedding, x_real)

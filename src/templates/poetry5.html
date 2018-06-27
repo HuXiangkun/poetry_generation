@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>藏头诗生成</title>
+</head>
+<body>
+    <h1>五言</h1>
+    <form method="POST">
+        <label for="name">姓名：</label>
+        <input name="name" id="name" required>
+        <input type="submit" value="生成藏头诗">
+    </form>
+    <br/>
+    <div>
+        {% if sent1 %} {{ sent1 }} {% endif %}
+        <br />
+        {% if sent2 %} {{ sent2 }} {% endif %}
+    </div>
+    <br/>
+
+    <div>
+        {% if err %} {{ err }} {% endif %}
+    </div>
+    <br/>
+</body>
+</html>

@@ -4,4 +4,10 @@
 check_points/model_50_5/checkpoint/
 data/
 paper/
-
+check_points/model_50_5/checkpoint
+check_points/model_50_5/model_50_5.ckpt.data-00000-of-00001
+check_points/model_50_5/model_50_5.ckpt.index
+*.meta
+*.data-00000-of-00001
+*.index
+check_points/model_50_7/checkpoint
