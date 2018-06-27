@@ -1,3 +1,7 @@
 
 *.iml
 *.xml
+check_points/model_50_5/checkpoint/
+data/
+paper/
+
