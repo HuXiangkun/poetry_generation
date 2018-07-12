@@ -15,11 +15,7 @@ class Poetry:
                                rnn_h_dim=150,
                                batch_size=50)
             ckpt = CheckpointManager("model_50_" + str(sent_len))
-
-            config = tf.ConfigProto()
-            config.gpu_options.allow_growth = True
-
-            self.sess = tf.Session(config=config, graph=graph)
+            self.sess = tf.Session(graph=graph)
             ckpt.restore(self.sess)
 
     def generate(self, w1, w2):

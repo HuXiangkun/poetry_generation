@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 from generate import Poetry
+import json
 
 import pickle
 
@@ -50,8 +51,6 @@ def poetry5():
             err = "名字必须大于等于2个字。"
         else:
             sent1, sent2, err = generate(name, 5)
-            print(sent1)
-            print(sent2)
     return render_template("poetry5.html", sent1=sent1, sent2=sent2, err=err)
 
 
@@ -72,6 +71,42 @@ def poetry7():
 @app.route("/")
 def root():
     return "Hello, World!"
+
+
+@app.route("/poetry_5/<name>", methods=['GET'])
+def get_poetry5(name):
+    sent1 = None
+    sent2 = None
+    err = None
+    if len(name) < 2:
+        err = "名字必须大于等于2个字。"
+    else:
+        sent1, sent2, err = generate(name, 5)
+    ret = {}
+    if err:
+        ret["error"] = err
+    else:
+        ret["s1"] = sent1
+        ret["s2"] = sent2
+    return json.dumps(ret)
+
+
+@app.route("/poetry_7/<name>", methods=['GET'])
+def get_poetry7(name):
+    sent1 = None
+    sent2 = None
+    err = None
+    if len(name) < 2:
+        err = "名字必须大于等于2个字。"
+    else:
+        sent1, sent2, err = generate(name, 7)
+    ret = {}
+    if err:
+        ret["error"] = err
+    else:
+        ret["s1"] = sent1
+        ret["s2"] = sent2
+    return json.dumps(ret)
 
 
 if __name__ == "__main__":

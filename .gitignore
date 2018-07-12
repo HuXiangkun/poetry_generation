@@ -11,3 +11,5 @@ check_points/model_50_5/model_50_5.ckpt.index
 *.data-00000-of-00001
 *.index
 check_points/model_50_7/checkpoint
+check_points/lm/model_50_7/checkpoint
+check_points/lm/model_50_5/checkpoint
