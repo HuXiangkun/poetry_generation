@@ -20,23 +20,36 @@ def generate(name, sent_len):
     err = None
     w1 = name[-2]
     w2 = name[-1]
+
+    origin_w1 = None
+    origin_w2 = None
+    if w1 not in vocab.keys():
+        origin_w1 = w1
+        w1 = "#"
     if w2 not in vocab.keys():
-        err = f"‘{w2}’是未知字符。"
-    elif w1 not in vocab.keys():
-        err = f"‘{w1}’是未知字符。"
-    elif (w1 in vocab.keys()) and (w2 in vocab.keys()):
-        w1 = [vocab[w1]]
-        w2 = [vocab[w2]]
-        if sent_len == 5:
-            sent1, sent2 = p5.generate(w1, w2)
-        else:
-            sent1, sent2 = p7.generate(w1, w2)
-        str1 = ""
-        str2 = ""
-        for w in sent1[0]:
-            str1 += id2word[w]
-        for w in sent2[0]:
-            str2 += id2word[w]
+        origin_w2 = w2
+        w2 = "#"
+
+    w1_id = [vocab[w1]]
+    w2_id = [vocab[w2]]
+    if sent_len == 5:
+        sent1, sent2 = p5.generate(w1_id, w2_id)
+    else:
+        sent1, sent2 = p7.generate(w1_id, w2_id)
+    str1 = ""
+    str2 = ""
+    if origin_w1:
+        str1 += origin_w1
+    else:
+        str1 += w1
+    if origin_w2:
+        str2 += origin_w2
+    else:
+        str2 += w2
+    for w in sent1[0][1:]:
+        str1 += id2word[w]
+    for w in sent2[0][1:]:
+        str2 += id2word[w]
     return str1, str2, err
 
 
